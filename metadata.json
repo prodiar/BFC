@@ -1,0 +1,8 @@
+{
+  "name": "BFC - Bangla Food Club",
+  "description": "Authentic Bangladeshi Fried Chicken and Snacks. Order fresh food delivered to your door.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}

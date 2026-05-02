@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Static admin check to avoid GEs (Get Entities) in list queries
+    function isStaticAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'razuanowar@gmail.com'
+      );
+    }
+
+    function isAdmin() {
+      return isStaticAdmin() || (
+        isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Collection Schemas & Validations ---
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isStaticAdmin();
+      allow create: if isSignedIn() && (incoming().role == 'CUSTOMER' || isStaticAdmin());
+      allow update: if isOwner(userId) || isStaticAdmin();
+    }
+
+    match /menu/{itemId} {
+      allow read: if true;
+      // Allow create for signed in users to enable seeding, but restrict updates to admins
+      allow create: if isSignedIn();
+      allow update, delete: if isStaticAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (existing().customerId == request.auth.uid || isStaticAdmin());
+      allow list: if isSignedIn() && (
+        (resource.data.customerId == request.auth.uid) || 
+        isStaticAdmin()
+      );
+      // Allow creation for signed-in users OR guests (if customerId is 'GUEST')
+      allow create: if (incoming().customerId == 'GUEST') || (isSignedIn() && (incoming().customerId == request.auth.uid || isStaticAdmin()));
+      allow update: if isStaticAdmin();
+    }
+
+    match /audit_logs/{logId} {
+      // Allow any user to create logs (needed for both guest and authenticated checkout)
+      allow create: if true;
+      allow read, list: if isStaticAdmin();
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "role": { "type": "string", "enum": ["ADMIN", "CUSTOMER"] },
+        "loyaltyPoints": { "type": "number" },
+        "tier": { "type": "string", "enum": ["ELITE", "GOLD", "SILVER", "BRONZE"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone", "role"]
+    },
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Food item in the menu",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "nameBn": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "image": { "type": "string" },
+        "stock": { "type": "number" },
+        "isPopular": { "type": "boolean" }
+      },
+      "required": ["name", "price", "category"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer food order",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "address": { "type": "string" },
+        "subtotal": { "type": "number" },
+        "deliveryCharge": { "type": "number" },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "paymentStatus": { "type": "string" }
+      },
+      "required": ["customerId", "items", "total", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/menu/{itemId}": {
+      "schema": "MenuItem",
+      "description": "Menu items"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders"
+    }
+  }
+}
